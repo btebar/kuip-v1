@@ -1,3 +1,4 @@
+import nltk
 import os
 from typing import List, Dict
 from langchain_community.document_loaders import DirectoryLoader
@@ -6,7 +7,10 @@ from langchain_community.embeddings import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain.schema import Document
 
-import nltk
+from dotenv import load_dotenv
+load_dotenv()
+OPEN_AI_KEY = os.environ.get("OPENAI_API_KEY")
+
 
 usePunkt = True
 # Ensure NLTK punkt is downloaded
@@ -36,6 +40,7 @@ class DocumentRetriever:
         documents = []
         for root, _, files in os.walk(self.data_dir):
             for file in files:
+                print('Found file!!')
                 if file.endswith('.txt'):
                     file_path = os.path.join(root, file)
                     with open(file_path, 'r', encoding='utf-8') as f:
@@ -49,8 +54,10 @@ class DocumentRetriever:
         return split_docs
 
     def create_vector_store(self, documents: List[Dict]):
-        embeddings = OpenAIEmbeddings(model=self.embedding_model)
+        embeddings = OpenAIEmbeddings(
+            model=self.embedding_model, openai_api_key=OPEN_AI_KEY)
         self.vector_store = Chroma.from_documents(documents, embeddings)
+
 
     def retrieve_relevant_docs(self, query: str, k: int = 3) -> List[Dict]:
         if not self.vector_store:
